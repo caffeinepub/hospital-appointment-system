@@ -1,0 +1,41 @@
+<html lang='en'>
+    <head>
+        <meta charset='UTF-8' />
+        <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+        <title>Hospital Appointment System</title>
+        <style>
+            /* Static splash screen fallback - shown before React mounts */
+            #root {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                background: white;
+            }
+            .splash-fallback {
+                text-align: center;
+                padding: 20px;
+            }
+            .splash-fallback h1 {
+                font-size: 2rem;
+                font-weight: 700;
+                color: #1e40af;
+                margin: 0;
+                line-height: 1.2;
+            }
+            @media (min-width: 640px) {
+                .splash-fallback h1 {
+                    font-size: 3rem;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div id='root'>
+            <div class="splash-fallback">
+                <h1>Hospital Appointment System</h1>
+            </div>
+        </div>
+        <script type='module' src='/src/main.tsx'></script>
+    </body>
+</html>

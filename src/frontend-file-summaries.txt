@@ -1,0 +1,22 @@
+{
+  "frontend/src/App.tsx": "Main application component with timed splash screen state that shows SplashScreen for 2 seconds on initial load before revealing the home page, hiding bottom navigation during splash.",
+  "frontend/src/hooks/useQueries.ts": "React Query hooks for all backend operations with enhanced initialization state tracking (isInitializing, initComplete) to prevent premature empty states and improved error handling for chatbot mutations.",
+  "frontend/src/pages/LoginPage.tsx": "Simple login page with centered title, description, and Internet Identity button on plain white background without any footer or branding.",
+  "frontend/src/pages/HomePage.tsx": "Minimal home page with welcome message, quick action buttons for navigation, and floating chatbot button, now supporting navigation callbacks for cross-page routing.",
+  "frontend/src/pages/DoctorsPage.tsx": "Doctor browsing page with improved loading state logic that shows loading UI until initialization completes and only displays empty state after query truly completes with empty results, preventing misleading \"No doctors found\" messages during startup.",
+  "frontend/src/pages/AppointmentsPage.tsx": "Appointment management page with tabs for upcoming and history, displaying complete appointment details including doctor name, specialization, date, start time, and end time with loading states for doctor information.",
+  "frontend/src/pages/ProfilePage.tsx": "Profile management page with logout functionality that clears session data and query cache, allowing users to create/edit their profile and end their session.",
+  "frontend/src/components/BottomNav.tsx": "Clean bottom navigation bar with four main sections using simple icons and text without decorative styling.",
+  "frontend/src/components/ProfileSetupModal.tsx": "Plain modal dialog for first-time patient profile creation with simple form fields.",
+  "frontend/src/components/BookingModal.tsx": "Appointment booking modal with authorization error detection and handling, displaying alerts when users need to complete their profile before booking, and providing navigation to profile page when authorization fails.",
+  "frontend/src/components/AppointmentActionModal.tsx": "Plain modal with tabs for rescheduling or cancelling appointments using simple bordered layouts, now supporting the generalSpecialist specialization.",
+  "frontend/src/components/ChatbotWidget.tsx": "Medical chatbot widget with enhanced message rendering that uses the formatting utility to display multi-paragraph responses with proper line breaks and bullet lists, showing user-friendly fallback messages for empty or error responses.",
+  "frontend/src/index.css": "Global styles with minimal OKLCH color system using simple grays and subtle blues for a clean, plain appearance without gradients or animations.",
+  "frontend/src/pages/WelcomePage.tsx": "Simple welcome landing page with large centered \"Hospital Appointment\" title and two buttons (Sign Up and Log In) that trigger different authentication modes on plain white background.",
+  "frontend/src/hooks/useAuth.ts": "Authentication hook managing session state with pseudo-principal generation and storage, supporting signup/login modes and localStorage persistence.",
+  "frontend/src/hooks/useActor.ts": "Actor initialization hook that creates backend actors using pseudo-principal identities from useAuth instead of Internet Identity, enabling proper authorization for pseudo-principal users.",
+  "frontend/src/lib/pseudoPrincipal.ts": "Utility functions for generating stable pseudo-principals from user data (name, phone, email) using deterministic hashing, with validation helpers.",
+  "frontend/index.html": "HTML entry point with static splash screen fallback displaying \"Hospital Appointment System\" before React mounts, replaced automatically when React renders.",
+  "frontend/src/components/SplashScreen.tsx": "Full-viewport centered splash screen component displaying \"Hospital Appointment System\" title with responsive typography and theme-aware styling.",
+  "frontend/src/utils/chatbotFormatting.tsx": "Utility functions for formatting chatbot responses into readable JSX with preserved line breaks, bullet points converted to list items, and sanitization logic to detect malformed/debug responses."
+}

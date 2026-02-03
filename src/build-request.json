@@ -1,0 +1,94 @@
+{
+  "kind": "build_request",
+  "title": "Update AI chatbot to give symptom-based next steps and recommend the right doctor",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Update the backend chatbot behavior so that when a user asks about symptoms (e.g., fever, headache, cold), the system returns a simple, non-diagnostic response that (1) acknowledges the symptoms, (2) provides safe next-step guidance (self-care + monitoring), (3) lists clear red-flag symptoms that require urgent care, and (4) recommends an appropriate doctor specialization based on a symptom→specialization mapping.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "yess i want exact same thing what you explained to me can we make chnages in our AI ?"
+        ]
+      },
+      "acceptanceCriteria": [
+        "For an input like \"I have fever and headache\", the returned text is in English and includes: basic next steps, red flags, and a recommended specialization (e.g., General Practice / Internal Medicine).",
+        "The response does not claim a diagnosis and includes a brief disclaimer (e.g., that it is not a medical diagnosis).",
+        "The backend returns a helpful response even if the external HTTP outcall fails, times out, or returns an empty/invalid response."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Enhance the backend chatbot response to recommend doctors from the existing seeded doctor directory by including at least one matching doctor name (and their specialization) when the recommended specialization exists in the current doctor list.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-5",
+          "msg-6"
+        ],
+        "quotes": [
+          "Suggests the right doctor to consult, for example: Fever, cold → General Physician",
+          "yess i want exact same thing what you explained to me can we make chnages in our AI ?"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When the chatbot recommends a specialization, it also includes one or more doctor names from `getAllDoctors()` that match that specialization (when available).",
+        "If no doctors match the specialization, the chatbot still returns the specialization recommendation and suggests visiting the Doctors page to browse."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Make the backend chatbot HTTP outcall construction safe for user-entered text by URL-encoding the user question before building the request URL, to prevent broken requests for spaces/special characters.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-4",
+          "msg-6"
+        ],
+        "quotes": [
+          "can you just tell the AI part like if we ask him i am have fever or any other symptons he will tell us what to do next",
+          "yess i want exact same thing what you explained to me can we make chnages in our AI ?"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Questions containing spaces and characters like '?' '&' '/' do not break the chatbot call and still return a response.",
+        "The backend no longer directly concatenates raw user input into the outcall URL without encoding."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Ensure the frontend chatbot UI cleanly displays the updated guidance + doctor recommendation text returned by the backend (multi-paragraph, readable formatting), without showing raw/debug output.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "yess i want exact same thing what you explained to me can we make chnages in our AI ?"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Chatbot responses that include multiple paragraphs/bullets remain readable in the chat UI (line breaks preserved).",
+        "If the backend returns an empty response or an error occurs, the UI shows a helpful fallback message in English (not raw error dumps)."
+      ]
+    }
+  ],
+  "constraints": [
+    "Backend must remain a single Motoko actor with all logic in `backend/main.mo`.",
+    "Do not edit frontend files in immutable paths: `frontend/src/hooks/useInternetIdentity.ts`, `frontend/src/hooks/useInternetIdentity.tsx`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`, and anything under `frontend/src/components/ui`.",
+    "User-facing text must be in English."
+  ],
+  "nonGoals": [
+    "Do not provide medical diagnoses or claim certainty about diseases/conditions.",
+    "Do not add third-party authentication providers (only Internet Identity is supported).",
+    "Do not add real-time chat/WebSockets or external databases."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

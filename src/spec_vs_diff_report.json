@@ -1,0 +1,72 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-03T13:43:28.081Z",
+  "summary": "Frontend chatbot rendering was enhanced with formatting/sanitization and user-friendly fallback messages. However, the diff summary does not provide evidence that the backend chatbot logic was updated to produce symptom-based next steps, red flags, specialization+doctor recommendations, or that user input is URL-encoded for the HTTP outcall. The diff also appears to introduce unrequested authentication/identity changes, including edits to an immutable frontend file path and pseudo-identity login behavior.",
+  "missing_requirements": [
+    {
+      "id": "REQ-1",
+      "requirement": "Update the backend chatbot behavior to return a non-diagnostic symptom-based response including acknowledgment, safe next steps, red flags, a recommended specialization, a disclaimer, and a robust fallback even if the HTTP outcall fails/returns invalid output.",
+      "reason": "The provided backend diff excerpt shows doctor seeding and types, but contains no visible changes to chatbot symptom handling, disclaimer text, red-flag guidance, specialization mapping logic, or explicit fallback behavior when the HTTP outcall fails/returns empty/invalid data.",
+      "evidence": [
+        "backend/main.mo (truncated; shows doctor initialization but no chatbot logic changes visible)"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "requirement": "Recommend at least one matching doctor name (and specialization) from the seeded directory when the recommended specialization exists; otherwise suggest visiting the Doctors page.",
+      "reason": "There is no evidence in the diff summary that the backend chatbot selects doctors from `getAllDoctors()` or matches doctors by specialization for inclusion in chatbot responses.",
+      "evidence": [
+        "backend/main.mo (truncated; no evidence of chatbot selecting doctors by specialization)"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "URL-encode the user question before constructing the backend HTTP outcall URL to safely handle spaces/special characters.",
+      "reason": "No evidence is shown that raw user input is URL-encoded before building the HTTP outcall request URL. The backend excerpt does not show any encoding helper usage or updated URL construction.",
+      "evidence": [
+        "backend/main.mo (truncated; no URL-encoding logic shown)"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Introduced pseudo-identity authentication/session handling instead of relying only on Internet Identity.",
+      "reason": "The BuildRequest explicitly states not to add third-party authentication providers and implies Internet Identity remains the supported method. The diff summary indicates a new auth approach using pseudo-principal identities and a changed actor initialization flow to use them, which is not requested and changes authentication behavior.",
+      "evidence": [
+        "frontend-file-summaries.txt (mentions: \"frontend/src/hooks/useAuth.ts\" pseudo-principal session management; \"frontend/src/hooks/useActor.ts\" uses pseudo-principal identities; \"frontend/src/lib/pseudoPrincipal.ts\" utility)"
+      ]
+    },
+    {
+      "description": "Edited an explicitly immutable frontend file path (`frontend/src/hooks/useActor.ts`).",
+      "reason": "The Constraints forbid editing `frontend/src/hooks/useActor.ts`, but the diff summary states it was modified.",
+      "evidence": [
+        "frontend-file-summaries.txt (entry for \"frontend/src/hooks/useActor.ts\" describes changed behavior)"
+      ]
+    },
+    {
+      "description": "Added a splash screen and multiple unrelated UI/UX changes (splash timing, revised pages, navigation changes, loading/empty-state logic) beyond the chatbot formatting requirement.",
+      "reason": "REQ-4 asks only to ensure the chatbot UI displays multi-paragraph guidance cleanly and provides a helpful fallback. The diff summary lists broad UI changes not requested by the BuildRequest.",
+      "evidence": [
+        "frontend-file-summaries.txt (entries for App.tsx splash screen, multiple pages/components changes, BottomNav changes, index.html splash fallback, SplashScreen.tsx)"
+      ]
+    },
+    {
+      "description": "Added a backend migration module and wired it into the actor (`backend/migration.mo`, `(with migration = Migration.run)`).",
+      "reason": "No migration-related change was requested in the BuildRequest.",
+      "evidence": [
+        "backend/migration.mo",
+        "backend/main.mo (shows `import Migration \"migration\";` and `(with migration = Migration.run)`)"
+      ]
+    }
+  ],
+  "confidence": 0.74,
+  "changed_files": [
+    "backend/main.mo",
+    "backend/migration.mo",
+    "frontend-file-summaries.txt",
+    "frontend/src/components/ChatbotWidget.tsx",
+    "frontend/src/utils/chatbotFormatting.tsx",
+    "project_state.json"
+  ]
+}

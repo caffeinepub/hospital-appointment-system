@@ -1,0 +1,27 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Chatbot UI formatting for symptom guidance + doctor recommendation",
+  "requirements": [
+    {
+      "id": "REQ-4",
+      "summary": "Render backend chatbot guidance text in a clean, readable multi-paragraph format and show an English fallback message for empty/error responses without exposing raw/debug output.",
+      "acceptanceCriteria": [
+        "Chatbot responses that include multiple paragraphs/bullets remain readable in the chat UI (line breaks preserved).",
+        "If the backend returns an empty response or an error occurs, the UI shows a helpful fallback message in English (not raw error dumps)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/utils/chatbotFormatting.tsx",
+          "operation": "create",
+          "description": "Add a small formatter that converts plain-text chatbot responses into readable JSX by preserving line breaks and presenting simple bullet-style lines (e.g., starting with '-', '*', or '•') as list items while keeping text strictly in English."
+        },
+        {
+          "path": "frontend/src/components/ChatbotWidget.tsx",
+          "operation": "modify",
+          "description": "Update chatbot message rendering to use the new formatter for bot messages so multi-paragraph guidance and bullets are displayed cleanly; refine sanitizeBotResponse to avoid false positives (e.g., removing/relaxing length-based debug detection) while still suppressing JSON/debug-looking payloads; ensure empty-string responses always show a helpful English fallback message and never show raw error objects."
+        }
+      ]
+    }
+  ]
+}
