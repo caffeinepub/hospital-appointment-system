@@ -14,7 +14,7 @@ export interface Appointment {
   'id' : bigint,
   'status' : AppointmentStatus,
   'doctorId' : bigint,
-  'patientId' : Principal,
+  'patientId' : Uint8Array,
   'createdAt' : Time,
   'timeSlot' : TimeSlot,
 }
@@ -31,7 +31,7 @@ export interface DoctorProfile {
   'hospitalName' : string,
 }
 export interface PatientProfile {
-  'id' : Principal,
+  'id' : Uint8Array,
   'name' : string,
   'email' : string,
   'phoneNumber' : string,
@@ -45,6 +45,7 @@ export type Specialization = { 'ophthalmology' : null } |
   { 'dermatology' : null } |
   { 'generalSpecialist' : null } |
   { 'gynecology' : null } |
+  { 'dentistry' : null } |
   { 'neurology' : null };
 export type Time = bigint;
 export interface TimeSlot {
@@ -79,25 +80,37 @@ export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'askMedicalChatbot' : ActorMethod<[string], string>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'bookAppointment' : ActorMethod<[AppointmentInput], bigint>,
-  'cancelAppointment' : ActorMethod<[bigint], undefined>,
-  'createPatientProfile' : ActorMethod<[string, string, string], undefined>,
+  'bookAppointment' : ActorMethod<[AppointmentInput, Uint8Array], bigint>,
+  'cancelAppointment' : ActorMethod<[bigint, Uint8Array], undefined>,
+  'createPatientProfile' : ActorMethod<
+    [string, string, string, Uint8Array],
+    undefined
+  >,
   'getAllDoctors' : ActorMethod<[], Array<DoctorProfile>>,
-  'getCallerPatientProfile' : ActorMethod<[], PatientProfile>,
-  'getCallerUserProfile' : ActorMethod<[], [] | [PatientProfile]>,
+  'getCallerPatientProfile' : ActorMethod<[Uint8Array], PatientProfile>,
+  'getCallerUserProfile' : ActorMethod<[Uint8Array], [] | [PatientProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getDoctorAvailability' : ActorMethod<[bigint], Array<TimeSlot>>,
   'getDoctorById' : ActorMethod<[bigint], DoctorProfile>,
-  'getPatientAppointments' : ActorMethod<[], Array<Appointment>>,
-  'getPatientProfile' : ActorMethod<[Principal], PatientProfile>,
-  'getUserProfile' : ActorMethod<[Principal], [] | [PatientProfile]>,
+  'getPatientAppointments' : ActorMethod<[Uint8Array], Array<Appointment>>,
+  'getPatientProfile' : ActorMethod<[Uint8Array], PatientProfile>,
+  'getUserProfile' : ActorMethod<[Uint8Array], [] | [PatientProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
-  'rescheduleAppointment' : ActorMethod<[bigint, TimeSlot], undefined>,
+  'rescheduleAppointment' : ActorMethod<
+    [bigint, TimeSlot, Uint8Array],
+    undefined
+  >,
   'runScheduledNotifications' : ActorMethod<[], undefined>,
-  'saveCallerUserProfile' : ActorMethod<[UserProfileInput], undefined>,
+  'saveCallerUserProfile' : ActorMethod<
+    [UserProfileInput, Uint8Array],
+    undefined
+  >,
   'system_install_was' : ActorMethod<[], undefined>,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
-  'updatePatientProfile' : ActorMethod<[string, string, string], undefined>,
+  'updatePatientProfile' : ActorMethod<
+    [string, string, string, Uint8Array],
+    undefined
+  >,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

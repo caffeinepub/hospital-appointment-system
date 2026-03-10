@@ -126,7 +126,7 @@ export interface TransformationInput {
     response: http_request_result;
 }
 export interface PatientProfile {
-    id: Principal;
+    id: Uint8Array;
     name: string;
     email: string;
     phoneNumber: string;
@@ -135,7 +135,7 @@ export interface Appointment {
     id: bigint;
     status: AppointmentStatus;
     doctorId: bigint;
-    patientId: Principal;
+    patientId: Uint8Array;
     createdAt: Time;
     timeSlot: TimeSlot;
 }
@@ -159,6 +159,7 @@ export enum Specialization {
     dermatology = "dermatology",
     generalSpecialist = "generalSpecialist",
     gynecology = "gynecology",
+    dentistry = "dentistry",
     neurology = "neurology"
 }
 export enum UserRole {
@@ -170,25 +171,25 @@ export interface backendInterface {
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
     askMedicalChatbot(question: string): Promise<string>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    bookAppointment(appointmentInput: AppointmentInput): Promise<bigint>;
-    cancelAppointment(appointmentId: bigint): Promise<void>;
-    createPatientProfile(name: string, phoneNumber: string, email: string): Promise<void>;
+    bookAppointment(appointmentInput: AppointmentInput, clientSessionToken: Uint8Array): Promise<bigint>;
+    cancelAppointment(appointmentId: bigint, clientSessionToken: Uint8Array): Promise<void>;
+    createPatientProfile(name: string, phoneNumber: string, email: string, clientSessionToken: Uint8Array): Promise<void>;
     getAllDoctors(): Promise<Array<DoctorProfile>>;
-    getCallerPatientProfile(): Promise<PatientProfile>;
-    getCallerUserProfile(): Promise<PatientProfile | null>;
+    getCallerPatientProfile(clientSessionToken: Uint8Array): Promise<PatientProfile>;
+    getCallerUserProfile(clientSessionToken: Uint8Array): Promise<PatientProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getDoctorAvailability(doctorId: bigint): Promise<Array<TimeSlot>>;
     getDoctorById(doctorId: bigint): Promise<DoctorProfile>;
-    getPatientAppointments(): Promise<Array<Appointment>>;
-    getPatientProfile(user: Principal): Promise<PatientProfile>;
-    getUserProfile(user: Principal): Promise<PatientProfile | null>;
+    getPatientAppointments(clientSessionToken: Uint8Array): Promise<Array<Appointment>>;
+    getPatientProfile(clientSessionToken: Uint8Array): Promise<PatientProfile>;
+    getUserProfile(clientSessionToken: Uint8Array): Promise<PatientProfile | null>;
     isCallerAdmin(): Promise<boolean>;
-    rescheduleAppointment(appointmentId: bigint, newTimeSlot: TimeSlot): Promise<void>;
+    rescheduleAppointment(appointmentId: bigint, newTimeSlot: TimeSlot, clientSessionToken: Uint8Array): Promise<void>;
     runScheduledNotifications(): Promise<void>;
-    saveCallerUserProfile(profile: UserProfileInput): Promise<void>;
+    saveCallerUserProfile(profile: UserProfileInput, clientSessionToken: Uint8Array): Promise<void>;
     system_install_was(): Promise<void>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
-    updatePatientProfile(name: string, phoneNumber: string, email: string): Promise<void>;
+    updatePatientProfile(name: string, phoneNumber: string, email: string, clientSessionToken: Uint8Array): Promise<void>;
 }
 import type { Appointment as _Appointment, AppointmentStatus as _AppointmentStatus, DoctorProfile as _DoctorProfile, PatientProfile as _PatientProfile, Specialization as _Specialization, Time as _Time, TimeSlot as _TimeSlot, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -235,45 +236,45 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async bookAppointment(arg0: AppointmentInput): Promise<bigint> {
+    async bookAppointment(arg0: AppointmentInput, arg1: Uint8Array): Promise<bigint> {
         if (this.processError) {
             try {
-                const result = await this.actor.bookAppointment(arg0);
+                const result = await this.actor.bookAppointment(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.bookAppointment(arg0);
+            const result = await this.actor.bookAppointment(arg0, arg1);
             return result;
         }
     }
-    async cancelAppointment(arg0: bigint): Promise<void> {
+    async cancelAppointment(arg0: bigint, arg1: Uint8Array): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.cancelAppointment(arg0);
+                const result = await this.actor.cancelAppointment(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.cancelAppointment(arg0);
+            const result = await this.actor.cancelAppointment(arg0, arg1);
             return result;
         }
     }
-    async createPatientProfile(arg0: string, arg1: string, arg2: string): Promise<void> {
+    async createPatientProfile(arg0: string, arg1: string, arg2: string, arg3: Uint8Array): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.createPatientProfile(arg0, arg1, arg2);
+                const result = await this.actor.createPatientProfile(arg0, arg1, arg2, arg3);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.createPatientProfile(arg0, arg1, arg2);
+            const result = await this.actor.createPatientProfile(arg0, arg1, arg2, arg3);
             return result;
         }
     }
@@ -291,31 +292,31 @@ export class Backend implements backendInterface {
             return from_candid_vec_n3(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getCallerPatientProfile(): Promise<PatientProfile> {
+    async getCallerPatientProfile(arg0: Uint8Array): Promise<PatientProfile> {
         if (this.processError) {
             try {
-                const result = await this.actor.getCallerPatientProfile();
+                const result = await this.actor.getCallerPatientProfile(arg0);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getCallerPatientProfile();
+            const result = await this.actor.getCallerPatientProfile(arg0);
             return result;
         }
     }
-    async getCallerUserProfile(): Promise<PatientProfile | null> {
+    async getCallerUserProfile(arg0: Uint8Array): Promise<PatientProfile | null> {
         if (this.processError) {
             try {
-                const result = await this.actor.getCallerUserProfile();
+                const result = await this.actor.getCallerUserProfile(arg0);
                 return from_candid_opt_n8(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getCallerUserProfile();
+            const result = await this.actor.getCallerUserProfile(arg0);
             return from_candid_opt_n8(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -361,21 +362,21 @@ export class Backend implements backendInterface {
             return from_candid_DoctorProfile_n4(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getPatientAppointments(): Promise<Array<Appointment>> {
+    async getPatientAppointments(arg0: Uint8Array): Promise<Array<Appointment>> {
         if (this.processError) {
             try {
-                const result = await this.actor.getPatientAppointments();
+                const result = await this.actor.getPatientAppointments(arg0);
                 return from_candid_vec_n11(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getPatientAppointments();
+            const result = await this.actor.getPatientAppointments(arg0);
             return from_candid_vec_n11(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getPatientProfile(arg0: Principal): Promise<PatientProfile> {
+    async getPatientProfile(arg0: Uint8Array): Promise<PatientProfile> {
         if (this.processError) {
             try {
                 const result = await this.actor.getPatientProfile(arg0);
@@ -389,7 +390,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async getUserProfile(arg0: Principal): Promise<PatientProfile | null> {
+    async getUserProfile(arg0: Uint8Array): Promise<PatientProfile | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getUserProfile(arg0);
@@ -417,17 +418,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async rescheduleAppointment(arg0: bigint, arg1: TimeSlot): Promise<void> {
+    async rescheduleAppointment(arg0: bigint, arg1: TimeSlot, arg2: Uint8Array): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.rescheduleAppointment(arg0, arg1);
+                const result = await this.actor.rescheduleAppointment(arg0, arg1, arg2);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.rescheduleAppointment(arg0, arg1);
+            const result = await this.actor.rescheduleAppointment(arg0, arg1, arg2);
             return result;
         }
     }
@@ -445,17 +446,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async saveCallerUserProfile(arg0: UserProfileInput): Promise<void> {
+    async saveCallerUserProfile(arg0: UserProfileInput, arg1: Uint8Array): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.saveCallerUserProfile(arg0);
+                const result = await this.actor.saveCallerUserProfile(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.saveCallerUserProfile(arg0);
+            const result = await this.actor.saveCallerUserProfile(arg0, arg1);
             return result;
         }
     }
@@ -487,17 +488,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updatePatientProfile(arg0: string, arg1: string, arg2: string): Promise<void> {
+    async updatePatientProfile(arg0: string, arg1: string, arg2: string, arg3: Uint8Array): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updatePatientProfile(arg0, arg1, arg2);
+                const result = await this.actor.updatePatientProfile(arg0, arg1, arg2, arg3);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updatePatientProfile(arg0, arg1, arg2);
+            const result = await this.actor.updatePatientProfile(arg0, arg1, arg2, arg3);
             return result;
         }
     }
@@ -524,14 +525,14 @@ function from_candid_record_n13(_uploadFile: (file: ExternalBlob) => Promise<Uin
     id: bigint;
     status: _AppointmentStatus;
     doctorId: bigint;
-    patientId: Principal;
+    patientId: Uint8Array;
     createdAt: _Time;
     timeSlot: _TimeSlot;
 }): {
     id: bigint;
     status: AppointmentStatus;
     doctorId: bigint;
-    patientId: Principal;
+    patientId: Uint8Array;
     createdAt: Time;
     timeSlot: TimeSlot;
 } {
@@ -605,9 +606,11 @@ function from_candid_variant_n7(_uploadFile: (file: ExternalBlob) => Promise<Uin
 } | {
     gynecology: null;
 } | {
+    dentistry: null;
+} | {
     neurology: null;
 }): Specialization {
-    return "ophthalmology" in value ? Specialization.ophthalmology : "cardiology" in value ? Specialization.cardiology : "internalMedicine" in value ? Specialization.internalMedicine : "generalPractice" in value ? Specialization.generalPractice : "orthopedics" in value ? Specialization.orthopedics : "pediatrics" in value ? Specialization.pediatrics : "dermatology" in value ? Specialization.dermatology : "generalSpecialist" in value ? Specialization.generalSpecialist : "gynecology" in value ? Specialization.gynecology : "neurology" in value ? Specialization.neurology : value;
+    return "ophthalmology" in value ? Specialization.ophthalmology : "cardiology" in value ? Specialization.cardiology : "internalMedicine" in value ? Specialization.internalMedicine : "generalPractice" in value ? Specialization.generalPractice : "orthopedics" in value ? Specialization.orthopedics : "pediatrics" in value ? Specialization.pediatrics : "dermatology" in value ? Specialization.dermatology : "generalSpecialist" in value ? Specialization.generalSpecialist : "gynecology" in value ? Specialization.gynecology : "dentistry" in value ? Specialization.dentistry : "neurology" in value ? Specialization.neurology : value;
 }
 function from_candid_vec_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Appointment>): Array<Appointment> {
     return value.map((x)=>from_candid_Appointment_n12(_uploadFile, _downloadFile, x));

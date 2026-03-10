@@ -32,6 +32,7 @@ export const Specialization = IDL.Variant({
   'dermatology' : IDL.Null,
   'generalSpecialist' : IDL.Null,
   'gynecology' : IDL.Null,
+  'dentistry' : IDL.Null,
   'neurology' : IDL.Null,
 });
 export const DoctorProfile = IDL.Record({
@@ -43,7 +44,7 @@ export const DoctorProfile = IDL.Record({
   'hospitalName' : IDL.Text,
 });
 export const PatientProfile = IDL.Record({
-  'id' : IDL.Principal,
+  'id' : IDL.Vec(IDL.Nat8),
   'name' : IDL.Text,
   'email' : IDL.Text,
   'phoneNumber' : IDL.Text,
@@ -58,7 +59,7 @@ export const Appointment = IDL.Record({
   'id' : IDL.Nat,
   'status' : AppointmentStatus,
   'doctorId' : IDL.Nat,
-  'patientId' : IDL.Principal,
+  'patientId' : IDL.Vec(IDL.Nat8),
   'createdAt' : Time,
   'timeSlot' : TimeSlot,
 });
@@ -90,33 +91,69 @@ export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'askMedicalChatbot' : IDL.Func([IDL.Text], [IDL.Text], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-  'bookAppointment' : IDL.Func([AppointmentInput], [IDL.Nat], []),
-  'cancelAppointment' : IDL.Func([IDL.Nat], [], []),
-  'createPatientProfile' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
+  'bookAppointment' : IDL.Func(
+      [AppointmentInput, IDL.Vec(IDL.Nat8)],
+      [IDL.Nat],
+      [],
+    ),
+  'cancelAppointment' : IDL.Func([IDL.Nat, IDL.Vec(IDL.Nat8)], [], []),
+  'createPatientProfile' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Vec(IDL.Nat8)],
+      [],
+      [],
+    ),
   'getAllDoctors' : IDL.Func([], [IDL.Vec(DoctorProfile)], ['query']),
-  'getCallerPatientProfile' : IDL.Func([], [PatientProfile], ['query']),
-  'getCallerUserProfile' : IDL.Func([], [IDL.Opt(PatientProfile)], ['query']),
+  'getCallerPatientProfile' : IDL.Func(
+      [IDL.Vec(IDL.Nat8)],
+      [PatientProfile],
+      ['query'],
+    ),
+  'getCallerUserProfile' : IDL.Func(
+      [IDL.Vec(IDL.Nat8)],
+      [IDL.Opt(PatientProfile)],
+      ['query'],
+    ),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getDoctorAvailability' : IDL.Func([IDL.Nat], [IDL.Vec(TimeSlot)], ['query']),
   'getDoctorById' : IDL.Func([IDL.Nat], [DoctorProfile], ['query']),
-  'getPatientAppointments' : IDL.Func([], [IDL.Vec(Appointment)], ['query']),
-  'getPatientProfile' : IDL.Func([IDL.Principal], [PatientProfile], ['query']),
+  'getPatientAppointments' : IDL.Func(
+      [IDL.Vec(IDL.Nat8)],
+      [IDL.Vec(Appointment)],
+      ['query'],
+    ),
+  'getPatientProfile' : IDL.Func(
+      [IDL.Vec(IDL.Nat8)],
+      [PatientProfile],
+      ['query'],
+    ),
   'getUserProfile' : IDL.Func(
-      [IDL.Principal],
+      [IDL.Vec(IDL.Nat8)],
       [IDL.Opt(PatientProfile)],
       ['query'],
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-  'rescheduleAppointment' : IDL.Func([IDL.Nat, TimeSlot], [], []),
+  'rescheduleAppointment' : IDL.Func(
+      [IDL.Nat, TimeSlot, IDL.Vec(IDL.Nat8)],
+      [],
+      [],
+    ),
   'runScheduledNotifications' : IDL.Func([], [], []),
-  'saveCallerUserProfile' : IDL.Func([UserProfileInput], [], []),
+  'saveCallerUserProfile' : IDL.Func(
+      [UserProfileInput, IDL.Vec(IDL.Nat8)],
+      [],
+      [],
+    ),
   'system_install_was' : IDL.Func([], [], []),
   'transform' : IDL.Func(
       [TransformationInput],
       [TransformationOutput],
       ['query'],
     ),
-  'updatePatientProfile' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
+  'updatePatientProfile' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Vec(IDL.Nat8)],
+      [],
+      [],
+    ),
 });
 
 export const idlInitArgs = [];
@@ -146,6 +183,7 @@ export const idlFactory = ({ IDL }) => {
     'dermatology' : IDL.Null,
     'generalSpecialist' : IDL.Null,
     'gynecology' : IDL.Null,
+    'dentistry' : IDL.Null,
     'neurology' : IDL.Null,
   });
   const DoctorProfile = IDL.Record({
@@ -157,7 +195,7 @@ export const idlFactory = ({ IDL }) => {
     'hospitalName' : IDL.Text,
   });
   const PatientProfile = IDL.Record({
-    'id' : IDL.Principal,
+    'id' : IDL.Vec(IDL.Nat8),
     'name' : IDL.Text,
     'email' : IDL.Text,
     'phoneNumber' : IDL.Text,
@@ -172,7 +210,7 @@ export const idlFactory = ({ IDL }) => {
     'id' : IDL.Nat,
     'status' : AppointmentStatus,
     'doctorId' : IDL.Nat,
-    'patientId' : IDL.Principal,
+    'patientId' : IDL.Vec(IDL.Nat8),
     'createdAt' : Time,
     'timeSlot' : TimeSlot,
   });
@@ -201,12 +239,28 @@ export const idlFactory = ({ IDL }) => {
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'askMedicalChatbot' : IDL.Func([IDL.Text], [IDL.Text], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-    'bookAppointment' : IDL.Func([AppointmentInput], [IDL.Nat], []),
-    'cancelAppointment' : IDL.Func([IDL.Nat], [], []),
-    'createPatientProfile' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
+    'bookAppointment' : IDL.Func(
+        [AppointmentInput, IDL.Vec(IDL.Nat8)],
+        [IDL.Nat],
+        [],
+      ),
+    'cancelAppointment' : IDL.Func([IDL.Nat, IDL.Vec(IDL.Nat8)], [], []),
+    'createPatientProfile' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Vec(IDL.Nat8)],
+        [],
+        [],
+      ),
     'getAllDoctors' : IDL.Func([], [IDL.Vec(DoctorProfile)], ['query']),
-    'getCallerPatientProfile' : IDL.Func([], [PatientProfile], ['query']),
-    'getCallerUserProfile' : IDL.Func([], [IDL.Opt(PatientProfile)], ['query']),
+    'getCallerPatientProfile' : IDL.Func(
+        [IDL.Vec(IDL.Nat8)],
+        [PatientProfile],
+        ['query'],
+      ),
+    'getCallerUserProfile' : IDL.Func(
+        [IDL.Vec(IDL.Nat8)],
+        [IDL.Opt(PatientProfile)],
+        ['query'],
+      ),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getDoctorAvailability' : IDL.Func(
         [IDL.Nat],
@@ -214,28 +268,44 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getDoctorById' : IDL.Func([IDL.Nat], [DoctorProfile], ['query']),
-    'getPatientAppointments' : IDL.Func([], [IDL.Vec(Appointment)], ['query']),
+    'getPatientAppointments' : IDL.Func(
+        [IDL.Vec(IDL.Nat8)],
+        [IDL.Vec(Appointment)],
+        ['query'],
+      ),
     'getPatientProfile' : IDL.Func(
-        [IDL.Principal],
+        [IDL.Vec(IDL.Nat8)],
         [PatientProfile],
         ['query'],
       ),
     'getUserProfile' : IDL.Func(
-        [IDL.Principal],
+        [IDL.Vec(IDL.Nat8)],
         [IDL.Opt(PatientProfile)],
         ['query'],
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-    'rescheduleAppointment' : IDL.Func([IDL.Nat, TimeSlot], [], []),
+    'rescheduleAppointment' : IDL.Func(
+        [IDL.Nat, TimeSlot, IDL.Vec(IDL.Nat8)],
+        [],
+        [],
+      ),
     'runScheduledNotifications' : IDL.Func([], [], []),
-    'saveCallerUserProfile' : IDL.Func([UserProfileInput], [], []),
+    'saveCallerUserProfile' : IDL.Func(
+        [UserProfileInput, IDL.Vec(IDL.Nat8)],
+        [],
+        [],
+      ),
     'system_install_was' : IDL.Func([], [], []),
     'transform' : IDL.Func(
         [TransformationInput],
         [TransformationOutput],
         ['query'],
       ),
-    'updatePatientProfile' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
+    'updatePatientProfile' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Vec(IDL.Nat8)],
+        [],
+        [],
+      ),
   });
 };
 

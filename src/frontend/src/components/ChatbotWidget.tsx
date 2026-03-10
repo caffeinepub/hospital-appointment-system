@@ -1,14 +1,21 @@
-import { useState, useRef, useEffect } from 'react';
-import { useAskChatbot } from '../hooks/useQueries';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, Send } from 'lucide-react';
-import { formatChatbotResponse, sanitizeBotResponse } from '../utils/chatbotFormatting';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Send, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useAskChatbot } from "../hooks/useQueries";
+import {
+  formatChatbotResponse,
+  isTimeoutError,
+  isUnauthorizedError,
+  sanitizeBotResponse,
+  sanitizeErrorDetail,
+} from "../utils/chatbotFormatting";
 
 interface Message {
-  role: 'user' | 'bot';
+  id: number;
+  role: "user" | "bot";
   content: string | React.ReactNode;
 }
 
@@ -19,12 +26,14 @@ interface ChatbotWidgetProps {
 export default function ChatbotWidget({ onClose }: ChatbotWidgetProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
-      role: 'bot',
+      id: 0,
+      role: "bot",
       content:
-        "Hello! I'm your medical navigation assistant. Ask me about symptoms and I'll help you find the right doctor."
-    }
+        "Hello! I'm your medical navigation assistant. Ask me about symptoms and I'll help you find the right doctor.",
+    },
   ]);
-  const [input, setInput] = useState('');
+  const [nextId, setNextId] = useState(1);
+  const [input, setInput] = useState("");
   const askChatbot = useAskChatbot();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -32,52 +41,68 @@ export default function ChatbotWidget({ onClose }: ChatbotWidgetProps) {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  });
+
+  const addMessage = (
+    role: "user" | "bot",
+    content: string | React.ReactNode,
+  ) => {
+    setMessages((prev) => [...prev, { id: nextId, role, content }]);
+    setNextId((n) => n + 1);
+  };
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || askChatbot.isPending) return;
 
     const userMessage = input.trim();
-    setInput('');
-
-    setMessages((prev) => [...prev, { role: 'user', content: userMessage }]);
+    setInput("");
+    addMessage("user", userMessage);
 
     try {
       const response = await askChatbot.mutateAsync(userMessage);
       const sanitizedResponse = sanitizeBotResponse(response);
-      
-      // If sanitization returned empty string, show fallback
+
       if (!sanitizedResponse) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: 'bot',
-            content: "I'm sorry, I couldn't generate a proper response. Please try asking again or visit the Doctors page to browse available specialists."
-          }
-        ]);
+        addMessage(
+          "bot",
+          "I'm sorry, I couldn't generate a proper response. Please try asking again or visit the Doctors page to browse available specialists.",
+        );
       } else {
-        // Format the response with proper line breaks and bullets
-        const formattedContent = formatChatbotResponse(sanitizedResponse);
-        setMessages((prev) => [...prev, { role: 'bot', content: formattedContent }]);
+        addMessage("bot", formatChatbotResponse(sanitizedResponse));
       }
-    } catch (error: any) {
-      console.error('Chatbot error:', error);
-      const errorMessage = error.message?.includes('Actor not available')
-        ? "I'm currently initializing. Please wait a moment and try again."
-        : "I'm sorry, I'm having trouble connecting right now. Please try again or visit the Doctors page to browse available specialists.";
-      
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'bot',
-          content: errorMessage
-        }
-      ]);
+    } catch (error: unknown) {
+      console.error("Chatbot error:", error);
+
+      if (isTimeoutError(error)) {
+        addMessage(
+          "bot",
+          "I'm sorry, the request took too long to complete. Please try asking your question again.",
+        );
+      } else if (isUnauthorizedError(error)) {
+        const errorDetail = sanitizeErrorDetail(error);
+        addMessage(
+          "bot",
+          `Please sign in to access the medical chatbot. You need to be logged in to use this feature.\n\nDetails: ${errorDetail}`,
+        );
+      } else {
+        const err = error as { message?: string };
+        const friendlyMessage = err.message?.includes("Actor not available")
+          ? "I'm currently initializing. Please wait a moment and try again."
+          : "I'm sorry, I'm having trouble connecting right now. Please try again or visit the Doctors page to browse available specialists.";
+
+        const errorDetail = sanitizeErrorDetail(error);
+        addMessage(
+          "bot",
+          errorDetail
+            ? `${friendlyMessage}\n\nDetails: ${errorDetail}`
+            : friendlyMessage,
+        );
+      }
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -102,20 +127,24 @@ export default function ChatbotWidget({ onClose }: ChatbotWidgetProps) {
         <CardContent className="p-0">
           <ScrollArea className="h-96 p-4" ref={scrollRef}>
             <div className="space-y-4">
-              {messages.map((message, index) => (
+              {messages.map((message) => (
                 <div
-                  key={index}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  key={message.id}
+                  className={`flex ${
+                    message.role === "user" ? "justify-end" : "justify-start"
+                  }`}
                 >
                   <div
                     className={`max-w-[80%] rounded-lg p-3 ${
-                      message.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-foreground'
+                      message.role === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-foreground"
                     }`}
                   >
-                    {typeof message.content === 'string' ? (
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    {typeof message.content === "string" ? (
+                      <p className="text-sm whitespace-pre-wrap">
+                        {message.content}
+                      </p>
                     ) : (
                       <div className="text-sm">{message.content}</div>
                     )}
@@ -126,9 +155,9 @@ export default function ChatbotWidget({ onClose }: ChatbotWidgetProps) {
                 <div className="flex justify-start">
                   <div className="bg-muted rounded-lg p-3">
                     <div className="flex gap-1">
-                      <div className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"></div>
-                      <div className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                      <div className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                      <div className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce" />
+                      <div className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:0.2s]" />
+                      <div className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:0.4s]" />
                     </div>
                   </div>
                 </div>

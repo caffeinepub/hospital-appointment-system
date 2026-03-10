@@ -1,29 +1,33 @@
-import { Home, Users, Calendar, User } from 'lucide-react';
-import { useEffect } from 'react';
+import { Calendar, Home, User, Users } from "lucide-react";
+import { useEffect } from "react";
 
-type Page = 'home' | 'doctors' | 'appointments' | 'profile';
+type Page = "home" | "doctors" | "appointments" | "profile";
 
 interface BottomNavProps {
   currentPage: Page;
   onPageChange: (page: Page) => void;
 }
 
-export default function BottomNav({ currentPage, onPageChange }: BottomNavProps) {
+export default function BottomNav({
+  currentPage,
+  onPageChange,
+}: BottomNavProps) {
   useEffect(() => {
     const handleNavigate = (event: Event) => {
       const customEvent = event as CustomEvent<Page>;
       onPageChange(customEvent.detail);
     };
 
-    window.addEventListener('navigate', handleNavigate as EventListener);
-    return () => window.removeEventListener('navigate', handleNavigate as EventListener);
+    window.addEventListener("navigate", handleNavigate as EventListener);
+    return () =>
+      window.removeEventListener("navigate", handleNavigate as EventListener);
   }, [onPageChange]);
 
   const navItems = [
-    { id: 'home' as Page, icon: Home, label: 'Home' },
-    { id: 'doctors' as Page, icon: Users, label: 'Doctors' },
-    { id: 'appointments' as Page, icon: Calendar, label: 'Appointments' },
-    { id: 'profile' as Page, icon: User, label: 'Profile' }
+    { id: "home" as Page, icon: Home, label: "Home" },
+    { id: "doctors" as Page, icon: Users, label: "Doctors" },
+    { id: "appointments" as Page, icon: Calendar, label: "Appointments" },
+    { id: "profile" as Page, icon: User, label: "Profile" },
   ];
 
   return (
@@ -36,12 +40,11 @@ export default function BottomNav({ currentPage, onPageChange }: BottomNavProps)
 
             return (
               <button
+                type="button"
                 key={item.id}
                 onClick={() => onPageChange(item.id)}
                 className={`flex flex-col items-center justify-center flex-1 h-full ${
-                  isActive
-                    ? 'text-primary'
-                    : 'text-muted-foreground'
+                  isActive ? "text-primary" : "text-muted-foreground"
                 }`}
               >
                 <Icon className="h-6 w-6 mb-1" />
@@ -54,4 +57,3 @@ export default function BottomNav({ currentPage, onPageChange }: BottomNavProps)
     </nav>
   );
 }
-

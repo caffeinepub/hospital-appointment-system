@@ -1,28 +1,33 @@
-import { useState } from 'react';
-import { useGetDoctorAvailability, useRescheduleAppointment, useCancelAppointment } from '../hooks/useQueries';
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { type Appointment, type TimeSlot, Specialization } from '../backend';
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from "react";
+import { type Appointment, Specialization, type TimeSlot } from "../backend";
+import {
+  useCancelAppointment,
+  useGetDoctorAvailability,
+  useRescheduleAppointment,
+} from "../hooks/useQueries";
 
 const specializationLabels: Record<Specialization, string> = {
-  [Specialization.cardiology]: 'Cardiology',
-  [Specialization.neurology]: 'Neurology',
-  [Specialization.pediatrics]: 'Pediatrics',
-  [Specialization.orthopedics]: 'Orthopedics',
-  [Specialization.dermatology]: 'Dermatology',
-  [Specialization.gynecology]: 'Gynecology',
-  [Specialization.ophthalmology]: 'Ophthalmology',
-  [Specialization.generalPractice]: 'General Practice',
-  [Specialization.internalMedicine]: 'Internal Medicine',
-  [Specialization.generalSpecialist]: 'General Specialist'
+  [Specialization.cardiology]: "Cardiology",
+  [Specialization.neurology]: "Neurology",
+  [Specialization.pediatrics]: "Pediatrics",
+  [Specialization.orthopedics]: "Orthopedics",
+  [Specialization.dermatology]: "Dermatology",
+  [Specialization.gynecology]: "Gynecology",
+  [Specialization.ophthalmology]: "Ophthalmology",
+  [Specialization.generalPractice]: "General Practice",
+  [Specialization.internalMedicine]: "Internal Medicine",
+  [Specialization.dentistry]: "Dentistry",
+  [Specialization.generalSpecialist]: "General Specialist",
 };
 
 interface AppointmentActionModalProps {
@@ -36,9 +41,11 @@ export default function AppointmentActionModal({
   appointment,
   doctorName,
   doctorSpecialization,
-  onClose
+  onClose,
 }: AppointmentActionModalProps) {
-  const { data: availableSlots = [], isLoading } = useGetDoctorAvailability(appointment.doctorId);
+  const { data: availableSlots = [], isLoading } = useGetDoctorAvailability(
+    appointment.doctorId,
+  );
   const rescheduleAppointment = useRescheduleAppointment();
   const cancelAppointment = useCancelAppointment();
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
@@ -48,7 +55,7 @@ export default function AppointmentActionModal({
 
     await rescheduleAppointment.mutateAsync({
       appointmentId: appointment.id,
-      newTimeSlot: selectedSlot
+      newTimeSlot: selectedSlot,
     });
 
     onClose();
@@ -64,7 +71,9 @@ export default function AppointmentActionModal({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Manage Appointment</DialogTitle>
-          <DialogDescription>Reschedule or cancel your appointment</DialogDescription>
+          <DialogDescription>
+            Reschedule or cancel your appointment
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -76,7 +85,8 @@ export default function AppointmentActionModal({
             <div className="mt-2 text-sm">
               <div className="font-medium">{appointment.timeSlot.day}</div>
               <div className="text-muted-foreground">
-                {appointment.timeSlot.startTime} - {appointment.timeSlot.endTime}
+                {appointment.timeSlot.startTime} -{" "}
+                {appointment.timeSlot.endTime}
               </div>
             </div>
           </div>
@@ -93,7 +103,7 @@ export default function AppointmentActionModal({
 
                 {isLoading ? (
                   <div className="text-center py-8">
-                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-2"></div>
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-2" />
                     <p className="text-sm text-muted-foreground">Loading...</p>
                   </div>
                 ) : availableSlots.length === 0 ? (
@@ -103,14 +113,15 @@ export default function AppointmentActionModal({
                 ) : (
                   <ScrollArea className="h-64 pr-4">
                     <div className="space-y-2">
-                      {availableSlots.map((slot, index) => (
+                      {availableSlots.map((slot) => (
                         <button
-                          key={index}
+                          type="button"
+                          key={`${slot.day}-${slot.startTime}`}
                           onClick={() => setSelectedSlot(slot)}
                           className={`w-full p-3 rounded-lg border text-left ${
                             selectedSlot === slot
-                              ? 'border-primary bg-accent'
-                              : 'border-border hover:bg-accent'
+                              ? "border-primary bg-accent"
+                              : "border-border hover:bg-accent"
                           }`}
                         >
                           <div className="font-medium text-sm">{slot.day}</div>
@@ -135,11 +146,11 @@ export default function AppointmentActionModal({
                 >
                   {rescheduleAppointment.isPending ? (
                     <>
-                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                       Rescheduling...
                     </>
                   ) : (
-                    'Confirm Reschedule'
+                    "Confirm Reschedule"
                   )}
                 </Button>
               </div>
@@ -148,7 +159,8 @@ export default function AppointmentActionModal({
             <TabsContent value="cancel" className="space-y-4">
               <div className="border rounded-lg p-4 bg-destructive/10">
                 <p className="text-sm text-muted-foreground">
-                  Are you sure you want to cancel this appointment? This action cannot be undone.
+                  Are you sure you want to cancel this appointment? This action
+                  cannot be undone.
                 </p>
               </div>
 
@@ -164,11 +176,11 @@ export default function AppointmentActionModal({
                 >
                   {cancelAppointment.isPending ? (
                     <>
-                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                       Cancelling...
                     </>
                   ) : (
-                    'Cancel Appointment'
+                    "Cancel Appointment"
                   )}
                 </Button>
               </div>

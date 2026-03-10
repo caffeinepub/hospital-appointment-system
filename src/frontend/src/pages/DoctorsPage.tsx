@@ -1,71 +1,84 @@
-import { useState } from 'react';
-import { useGetAllDoctors } from '../hooks/useQueries';
-import BookingModal from '../components/BookingModal';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
-import { Search, AlertCircle, Building2 } from 'lucide-react';
-import { type DoctorProfile, Specialization } from '../backend';
+  SelectValue,
+} from "@/components/ui/select";
+import { AlertCircle, Building2, Search } from "lucide-react";
+import { useState } from "react";
+import { type DoctorProfile, Specialization } from "../backend";
+import BookingModal from "../components/BookingModal";
+import { useGetAllDoctors } from "../hooks/useQueries";
 
 const specializationLabels: Record<Specialization, string> = {
-  [Specialization.cardiology]: 'Cardiology',
-  [Specialization.neurology]: 'Neurology',
-  [Specialization.pediatrics]: 'Pediatrics',
-  [Specialization.orthopedics]: 'Orthopedics',
-  [Specialization.dermatology]: 'Dermatology',
-  [Specialization.gynecology]: 'Gynecology',
-  [Specialization.ophthalmology]: 'Ophthalmology',
-  [Specialization.generalPractice]: 'General Practice',
-  [Specialization.internalMedicine]: 'Internal Medicine',
-  [Specialization.generalSpecialist]: 'General Specialist'
+  [Specialization.cardiology]: "Cardiology",
+  [Specialization.neurology]: "Neurology",
+  [Specialization.pediatrics]: "Pediatrics",
+  [Specialization.orthopedics]: "Orthopedics",
+  [Specialization.dermatology]: "Dermatology",
+  [Specialization.gynecology]: "Gynecology",
+  [Specialization.ophthalmology]: "Ophthalmology",
+  [Specialization.generalPractice]: "General Practice",
+  [Specialization.internalMedicine]: "Internal Medicine",
+  [Specialization.dentistry]: "Dentistry",
+  [Specialization.generalSpecialist]: "General Specialist",
 };
 
-type Page = 'home' | 'doctors' | 'appointments' | 'profile';
+type Page = "home" | "doctors" | "appointments" | "profile";
 
 interface DoctorsPageProps {
   onNavigate?: (page: Page) => void;
 }
 
 export default function DoctorsPage({ onNavigate }: DoctorsPageProps) {
-  const { data: doctors = [], isLoading, isFetched, isError, refetch } = useGetAllDoctors();
-  const [selectedDoctor, setSelectedDoctor] = useState<DoctorProfile | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterSpecialization, setFilterSpecialization] = useState<string>('all');
+  const {
+    data: doctors = [],
+    isLoading,
+    isFetched,
+    isError,
+    refetch,
+  } = useGetAllDoctors();
+  const [selectedDoctor, setSelectedDoctor] = useState<DoctorProfile | null>(
+    null,
+  );
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterSpecialization, setFilterSpecialization] =
+    useState<string>("all");
 
   const handleProfileRequired = () => {
     if (onNavigate) {
-      onNavigate('profile');
+      onNavigate("profile");
     }
   };
 
   const filteredDoctors = doctors.filter((doctor) => {
-    const matchesSearch = doctor.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = doctor.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
     const matchesSpecialization =
-      filterSpecialization === 'all' || doctor.specialization === filterSpecialization;
+      filterSpecialization === "all" ||
+      doctor.specialization === filterSpecialization;
     return matchesSearch && matchesSpecialization;
   });
 
-  // Show loading state while initializing or fetching
   const showLoading = isLoading || !isFetched;
-  // Only show empty state if query has completed and returned empty array
   const showEmptyState = isFetched && !isLoading && doctors.length === 0;
 
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Find a Doctor</h1>
-        <p className="text-muted-foreground">Browse and book appointments with our specialists</p>
+        <p className="text-muted-foreground">
+          Browse and book appointments with our specialists
+        </p>
       </div>
 
       <div className="space-y-4 mb-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Search by doctor name..."
             value={searchQuery}
@@ -75,7 +88,11 @@ export default function DoctorsPage({ onNavigate }: DoctorsPageProps) {
           />
         </div>
 
-        <Select value={filterSpecialization} onValueChange={setFilterSpecialization} disabled={showLoading}>
+        <Select
+          value={filterSpecialization}
+          onValueChange={setFilterSpecialization}
+          disabled={showLoading}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Filter by specialization" />
           </SelectTrigger>
@@ -92,7 +109,7 @@ export default function DoctorsPage({ onNavigate }: DoctorsPageProps) {
 
       {showLoading ? (
         <div className="text-center py-12">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4"></div>
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
           <p className="text-muted-foreground">Loading doctors...</p>
         </div>
       ) : isError ? (
@@ -104,12 +121,18 @@ export default function DoctorsPage({ onNavigate }: DoctorsPageProps) {
       ) : showEmptyState ? (
         <div className="text-center py-12">
           <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">No doctors available at the moment</p>
-          <Button onClick={() => refetch()} className="mt-4">Refresh</Button>
+          <p className="text-muted-foreground">
+            No doctors available at the moment
+          </p>
+          <Button onClick={() => refetch()} className="mt-4">
+            Refresh
+          </Button>
         </div>
       ) : filteredDoctors.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">No doctors match your search criteria</p>
+          <p className="text-muted-foreground">
+            No doctors match your search criteria
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -137,7 +160,10 @@ export default function DoctorsPage({ onNavigate }: DoctorsPageProps) {
                 <p className="text-xs text-muted-foreground mb-2">
                   {doctor.availableSlots.length} slots available
                 </p>
-                <Button onClick={() => setSelectedDoctor(doctor)} className="w-full">
+                <Button
+                  onClick={() => setSelectedDoctor(doctor)}
+                  className="w-full"
+                >
                   Book Appointment
                 </Button>
               </div>

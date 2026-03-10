@@ -1,29 +1,34 @@
-import { useState } from 'react';
-import { useGetDoctorAvailability, useBookAppointment, useGetCallerPatientProfile } from '../hooks/useQueries';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
-import { type DoctorProfile, type TimeSlot, Specialization } from '../backend';
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { AlertCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { type DoctorProfile, Specialization, type TimeSlot } from "../backend";
+import {
+  useBookAppointment,
+  useGetCallerPatientProfile,
+  useGetDoctorAvailability,
+} from "../hooks/useQueries";
 
 const specializationLabels: Record<Specialization, string> = {
-  [Specialization.cardiology]: 'Cardiology',
-  [Specialization.neurology]: 'Neurology',
-  [Specialization.pediatrics]: 'Pediatrics',
-  [Specialization.orthopedics]: 'Orthopedics',
-  [Specialization.dermatology]: 'Dermatology',
-  [Specialization.gynecology]: 'Gynecology',
-  [Specialization.ophthalmology]: 'Ophthalmology',
-  [Specialization.generalPractice]: 'General Practice',
-  [Specialization.internalMedicine]: 'Internal Medicine',
-  [Specialization.generalSpecialist]: 'General Specialist'
+  [Specialization.cardiology]: "Cardiology",
+  [Specialization.neurology]: "Neurology",
+  [Specialization.pediatrics]: "Pediatrics",
+  [Specialization.orthopedics]: "Orthopedics",
+  [Specialization.dermatology]: "Dermatology",
+  [Specialization.gynecology]: "Gynecology",
+  [Specialization.ophthalmology]: "Ophthalmology",
+  [Specialization.generalPractice]: "General Practice",
+  [Specialization.internalMedicine]: "Internal Medicine",
+  [Specialization.dentistry]: "Dentistry",
+  [Specialization.generalSpecialist]: "General Specialist",
 };
 
 interface BookingModalProps {
@@ -32,39 +37,79 @@ interface BookingModalProps {
   onProfileRequired?: () => void;
 }
 
-export default function BookingModal({ doctor, onClose, onProfileRequired }: BookingModalProps) {
-  const { data: availableSlots = [], isLoading } = useGetDoctorAvailability(doctor.id);
-  const { data: userProfile } = useGetCallerPatientProfile();
+export default function BookingModal({
+  doctor,
+  onClose,
+  onProfileRequired,
+}: BookingModalProps) {
+  const { data: availableSlots = [], isLoading } = useGetDoctorAvailability(
+    doctor.id,
+  );
+  const {
+    data: userProfile,
+    isLoading: profileLoading,
+    isFetched: profileFetched,
+  } = useGetCallerPatientProfile();
   const bookAppointment = useBookAppointment();
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
-  const [authError, setAuthError] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+
+  const isProfileIncomplete =
+    !userProfile ||
+    !userProfile.name ||
+    !userProfile.phoneNumber ||
+    !userProfile.email;
+
+  useEffect(() => {
+    if (!isProfileIncomplete && bookingError) {
+      setBookingError(null);
+    }
+  }, [isProfileIncomplete, bookingError]);
 
   const handleBook = async () => {
     if (!selectedSlot) return;
 
+    if (isProfileIncomplete) {
+      setBookingError(
+        "Please complete your profile before booking appointments.",
+      );
+      return;
+    }
+
     try {
-      setAuthError(false);
+      setBookingError(null);
       await bookAppointment.mutateAsync({
         doctorId: doctor.id,
-        timeSlot: selectedSlot
+        timeSlot: selectedSlot,
       });
       onClose();
-    } catch (error: any) {
-      if (error.message?.includes('Unauthorized')) {
-        setAuthError(true);
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      if (
+        err.message?.includes("does not exist") ||
+        err.message?.includes("Unauthorized")
+      ) {
+        setBookingError(
+          "Please complete your profile before booking appointments.",
+        );
+      } else {
+        setBookingError(err.message || "Failed to book appointment");
       }
     }
   };
 
-  const handleProfileSetup = () => {
+  const handleGoToProfile = () => {
     onClose();
     if (onProfileRequired) {
       onProfileRequired();
     }
   };
 
-  // Check if profile is incomplete
-  const isProfileIncomplete = !userProfile || !userProfile.name || !userProfile.phoneNumber || !userProfile.email;
+  const isBookingDisabled =
+    !selectedSlot ||
+    bookAppointment.isPending ||
+    isProfileIncomplete ||
+    profileLoading;
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
@@ -75,33 +120,35 @@ export default function BookingModal({ doctor, onClose, onProfileRequired }: Boo
         </DialogHeader>
 
         <div className="space-y-4">
-          {authError && (
+          {bookingError && (
             <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {bookingError}
+                {bookingError.includes("profile") && (
+                  <Button
+                    variant="link"
+                    className="p-0 h-auto font-semibold ml-1"
+                    onClick={handleGoToProfile}
+                  >
+                    Go to Profile
+                  </Button>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {isProfileIncomplete && !bookingError && profileFetched && (
+            <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 Please complete your profile before booking appointments.
                 <Button
                   variant="link"
                   className="p-0 h-auto font-semibold ml-1"
-                  onClick={handleProfileSetup}
+                  onClick={handleGoToProfile}
                 >
                   Go to Profile
-                </Button>
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {isProfileIncomplete && !authError && (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Make sure your profile is complete before booking.
-                <Button
-                  variant="link"
-                  className="p-0 h-auto font-semibold ml-1"
-                  onClick={handleProfileSetup}
-                >
-                  Complete Profile
                 </Button>
               </AlertDescription>
             </Alert>
@@ -122,7 +169,7 @@ export default function BookingModal({ doctor, onClose, onProfileRequired }: Boo
 
             {isLoading ? (
               <div className="text-center py-8">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-2"></div>
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">Loading...</p>
               </div>
             ) : availableSlots.length === 0 ? (
@@ -132,15 +179,17 @@ export default function BookingModal({ doctor, onClose, onProfileRequired }: Boo
             ) : (
               <ScrollArea className="h-64 pr-4">
                 <div className="space-y-2">
-                  {availableSlots.map((slot, index) => (
+                  {availableSlots.map((slot) => (
                     <button
-                      key={index}
+                      type="button"
+                      key={`${slot.day}-${slot.startTime}`}
                       onClick={() => setSelectedSlot(slot)}
+                      disabled={isProfileIncomplete}
                       className={`w-full p-3 rounded-lg border text-left ${
                         selectedSlot === slot
-                          ? 'border-primary bg-accent'
-                          : 'border-border hover:bg-accent'
-                      }`}
+                          ? "border-primary bg-accent"
+                          : "border-border hover:bg-accent"
+                      } ${isProfileIncomplete ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
                       <div className="font-medium text-sm">{slot.day}</div>
                       <div className="text-xs text-muted-foreground">
@@ -157,20 +206,26 @@ export default function BookingModal({ doctor, onClose, onProfileRequired }: Boo
             <Button variant="outline" onClick={onClose} className="flex-1">
               Cancel
             </Button>
-            <Button
-              onClick={handleBook}
-              disabled={!selectedSlot || bookAppointment.isPending}
-              className="flex-1"
-            >
-              {bookAppointment.isPending ? (
-                <>
-                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                  Booking...
-                </>
-              ) : (
-                'Confirm Booking'
-              )}
-            </Button>
+            {isProfileIncomplete ? (
+              <Button onClick={handleGoToProfile} className="flex-1">
+                Complete Profile
+              </Button>
+            ) : (
+              <Button
+                onClick={handleBook}
+                disabled={isBookingDisabled}
+                className="flex-1"
+              >
+                {bookAppointment.isPending ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Booking...
+                  </>
+                ) : (
+                  "Confirm Booking"
+                )}
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>

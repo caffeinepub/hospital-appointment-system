@@ -44,7 +44,7 @@ export interface TransformationInput {
     response: http_request_result;
 }
 export interface PatientProfile {
-    id: Principal;
+    id: Uint8Array;
     name: string;
     email: string;
     phoneNumber: string;
@@ -53,7 +53,7 @@ export interface Appointment {
     id: bigint;
     status: AppointmentStatus;
     doctorId: bigint;
-    patientId: Principal;
+    patientId: Uint8Array;
     createdAt: Time;
     timeSlot: TimeSlot;
 }
@@ -77,6 +77,7 @@ export enum Specialization {
     dermatology = "dermatology",
     generalSpecialist = "generalSpecialist",
     gynecology = "gynecology",
+    dentistry = "dentistry",
     neurology = "neurology"
 }
 export enum UserRole {
@@ -87,23 +88,23 @@ export enum UserRole {
 export interface backendInterface {
     askMedicalChatbot(question: string): Promise<string>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    bookAppointment(appointmentInput: AppointmentInput): Promise<bigint>;
-    cancelAppointment(appointmentId: bigint): Promise<void>;
-    createPatientProfile(name: string, phoneNumber: string, email: string): Promise<void>;
+    bookAppointment(appointmentInput: AppointmentInput, clientSessionToken: Uint8Array): Promise<bigint>;
+    cancelAppointment(appointmentId: bigint, clientSessionToken: Uint8Array): Promise<void>;
+    createPatientProfile(name: string, phoneNumber: string, email: string, clientSessionToken: Uint8Array): Promise<void>;
     getAllDoctors(): Promise<Array<DoctorProfile>>;
-    getCallerPatientProfile(): Promise<PatientProfile>;
-    getCallerUserProfile(): Promise<PatientProfile | null>;
+    getCallerPatientProfile(clientSessionToken: Uint8Array): Promise<PatientProfile>;
+    getCallerUserProfile(clientSessionToken: Uint8Array): Promise<PatientProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getDoctorAvailability(doctorId: bigint): Promise<Array<TimeSlot>>;
     getDoctorById(doctorId: bigint): Promise<DoctorProfile>;
-    getPatientAppointments(): Promise<Array<Appointment>>;
-    getPatientProfile(user: Principal): Promise<PatientProfile>;
-    getUserProfile(user: Principal): Promise<PatientProfile | null>;
+    getPatientAppointments(clientSessionToken: Uint8Array): Promise<Array<Appointment>>;
+    getPatientProfile(clientSessionToken: Uint8Array): Promise<PatientProfile>;
+    getUserProfile(clientSessionToken: Uint8Array): Promise<PatientProfile | null>;
     isCallerAdmin(): Promise<boolean>;
-    rescheduleAppointment(appointmentId: bigint, newTimeSlot: TimeSlot): Promise<void>;
+    rescheduleAppointment(appointmentId: bigint, newTimeSlot: TimeSlot, clientSessionToken: Uint8Array): Promise<void>;
     runScheduledNotifications(): Promise<void>;
-    saveCallerUserProfile(profile: UserProfileInput): Promise<void>;
+    saveCallerUserProfile(profile: UserProfileInput, clientSessionToken: Uint8Array): Promise<void>;
     system_install_was(): Promise<void>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
-    updatePatientProfile(name: string, phoneNumber: string, email: string): Promise<void>;
+    updatePatientProfile(name: string, phoneNumber: string, email: string, clientSessionToken: Uint8Array): Promise<void>;
 }
