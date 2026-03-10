@@ -222,7 +222,17 @@ export function useInitializeBackend() {
 // Doctor Queries
 export function useGetAllDoctors() {
   const { actor, isFetching: actorFetching } = useActor();
-  const { isInitializing, initComplete } = useInitializeBackend();
+  const queryClient = useQueryClient();
+
+  // Run initialization in background; refetch doctors when it completes
+  const { initComplete } = useInitializeBackend();
+
+  // Refetch doctors after initialization completes
+  useEffect(() => {
+    if (initComplete) {
+      queryClient.invalidateQueries({ queryKey: ["doctors"] });
+    }
+  }, [initComplete, queryClient]);
 
   const query = useQuery<DoctorProfile[]>({
     queryKey: ["doctors"],
@@ -241,16 +251,18 @@ export function useGetAllDoctors() {
         throw error;
       }
     },
-    enabled: !!actor && !actorFetching && initComplete,
+    enabled: !!actor && !actorFetching,
     staleTime: 5 * 60 * 1000,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
   });
 
   return {
     ...query,
-    isLoading: actorFetching || isInitializing || query.isLoading,
-    isFetched: initComplete && query.isFetched,
+    isLoading: actorFetching || query.isLoading,
+    isFetched: query.isFetched,
   };
 }
 
